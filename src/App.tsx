@@ -1,8 +1,9 @@
 import { pipe } from "fp-ts/lib/function";
 import React, { useState } from "react";
 import { appEnv } from "./AppEnv";
-import { RD } from "./fp-ts-exports";
+import { Eq, RD } from "./fp-ts-exports";
 import { useReaderTaskEither } from "./hooks/useReaderTaskEither";
+import { useReaderTaskEitherWithRemoteData } from "./hooks/useReaderTaskEitherWithRemoteData";
 import { Dog } from "./model/Dog";
 import { getDogsWithCache, getDogWithCache } from "./model/DogService";
 
@@ -25,19 +26,14 @@ export const App = () => {
   });
 
   // RTE with parameters works the same way
-  const [dogRD, setDogRD] = useState<RD.RemoteData<{ error: string }, Dog>>(
-    () => RD.initial
-  );
 
-  useReaderTaskEither({
-    rte: getDogWithCache("wolfhound"),
+  const [dogId, setDogId] = useState(() => "wolfhound");
+
+  const dogRD = useReaderTaskEitherWithRemoteData({
+    rte: getDogWithCache(dogId),
     rteEnv: appEnv, // Could stub in a dummy AppEnv here (or whatever mix of dummy & real stuff you want)
-    effectDeps: [], // TODO
-    eqEffectDeps: { equals: () => true }, // TODO
-    // If using redux, you could use these to dispatch actions for updating redux state
-    onBeforeEffect: () => setDogRD(RD.pending),
-    onError: (_) => setDogRD(RD.failure({ error: "Failed to get dog" })), // TODO: not really handling the errors here, but we could
-    onSuccess: (dog) => setDogRD(RD.success(dog)),
+    effectDeps: [dogId],
+    eqEffectDeps: Eq.getTupleEq(Eq.eqString),
   });
 
   return (
@@ -56,7 +52,7 @@ export const App = () => {
         RD.fold(
           () => <>Loading...</>,
           () => <>Loading...</>,
-          (error) => <div>{error.error}</div>,
+          (error) => <div>Failed to get the dog</div>,
           (dogs) => <div>Got the dog</div>
         )
       )}

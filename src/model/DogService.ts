@@ -23,13 +23,14 @@ export const getDogs: RTE.ReaderTaskEither<
   | HttpRequestError
   | HttpResponseStatusError
   | HttpContentTypeError<"json">
-  | NotFoundError
   | DecodeError,
   Array<Dog>
 > = sendBasicGetRequest("/dogs", t.array(dogType).decode);
 
 /**
  * Utilizes the HttpClient and LocalStorage modules to get Dog data from the cache, or via the API
+ *
+ * TODO: could abstract this type of pattern
  */
 export const getDogsWithCache: RTE.ReaderTaskEither<
   HttpClientModule & LocalStorageModule,
@@ -64,3 +65,57 @@ export const getDogsWithCache: RTE.ReaderTaskEither<
     );
   })
 );
+
+/**
+ * Gets a dog via the HTTP API
+ */
+export const getDog = (
+  dogId: string
+): RTE.ReaderTaskEither<
+  HttpClientModule,
+  | HttpRequestError
+  | HttpResponseStatusError
+  | HttpContentTypeError<"json">
+  | DecodeError,
+  Dog
+> => sendBasicGetRequest(`/dogs/${dogId}`, dogType.decode);
+
+/**
+ * Utilizes the HttpClient and LocalStorage modules to get Dog data from the cache, or via the API
+ */
+export const getDogWithCache = (
+  dogId: string
+): RTE.ReaderTaskEither<
+  HttpClientModule & LocalStorageModule,
+  | HttpRequestError
+  | HttpResponseStatusError
+  | HttpContentTypeError<"json">
+  | NotFoundError
+  | DecodeError,
+  Dog
+> =>
+  pipe(
+    // Check the cache first
+    getAndDecodeItem(`dog-${dogId}`, dogType.decode),
+    // TODO: RTE.tap
+    RTE.map((dog) => {
+      console.log(`cache hit for dog ${dogId}`);
+      return dog;
+    }),
+    // If cache is empty, run the fetch and then cache the response
+    RTE.altW(() => {
+      console.log(`cache miss for dog ${dogId}`);
+      return pipe(
+        // GET the data
+        getDog(dogId),
+        RTE.chainW((dog) =>
+          pipe(
+            // Store it in local storage
+            encodeAndSetItem(`dog-${dogId}`, dog, dogType.encode),
+            // Return the data now
+            RTE.map((_) => dog)
+          )
+        )
+      );
+    })
+  );

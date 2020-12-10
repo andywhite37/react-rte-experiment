@@ -53,7 +53,7 @@ export const App = () => {
           () => <>Loading...</>,
           () => <>Loading...</>,
           (error) => <div>Failed to get the dog</div>,
-          (dogs) => <div>Got the dog</div>
+          (dog: Dog) => <div>Got the dog</div>
         )
       )}
     </>

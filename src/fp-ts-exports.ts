@@ -1,6 +1,7 @@
 export * as RD from "@devexperts/remote-data-ts";
 export * as A from "fp-ts/lib/Array";
 export * as E from "fp-ts/lib/Either";
+export * as Eq from "fp-ts/lib/Eq";
 export * as IO from "fp-ts/lib/IO";
 export * as IOE from "fp-ts/lib/IOEither";
 export * as NEA from "fp-ts/lib/NonEmptyArray";

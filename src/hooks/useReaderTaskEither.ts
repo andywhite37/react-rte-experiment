@@ -1,12 +1,18 @@
 import { pipe } from "fp-ts/lib/pipeable";
 import { useEffect } from "react";
-import { E, RTE } from "../fp-ts-exports";
+import { E, Eq, RTE } from "../fp-ts-exports";
 
 // TODO: not sure how best to do this... just toying
-export const useAppEnv = <R, E, A, EffectDeps extends Array<unknown>>({
+export const useReaderTaskEither = <
+  R,
+  E,
+  A,
+  EffectDeps extends Array<unknown>
+>({
   rte,
   rteEnv,
   effectDeps,
+  eqEffectDeps,
   onBeforeEffect,
   onError,
   onSuccess,
@@ -15,11 +21,14 @@ export const useAppEnv = <R, E, A, EffectDeps extends Array<unknown>>({
   rte: RTE.ReaderTaskEither<R, E, A>;
   rteEnv: R;
   effectDeps: EffectDeps;
+  eqEffectDeps: Eq.Eq<EffectDeps>;
   onBeforeEffect?: () => void;
   onError: (e: E) => void;
   onSuccess: (a: A) => void;
   onFinally?: () => void;
 }) => {
+  // TODO: the eqEffectDeps is not currently used
+
   useEffect(() => {
     // 1. Invoke before effect callback
     if (onBeforeEffect !== undefined) onBeforeEffect();

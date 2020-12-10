@@ -29,6 +29,9 @@ export interface LocalStorageModule {
   localStorage: LocalStorage;
 }
 
+// TODO: note that the below functiosn would be better as `ReaderIOEither` (or even maybe even `ReaderIO`), but those don't exist in fp-ts at this time.
+// They would be easy to create though, and would be liftable into RTE, just like all the other stuff.
+
 /**
  * Gets an item from localStorage
  *

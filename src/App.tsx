@@ -30,7 +30,17 @@ export const App = () => {
   const [dogId, setDogId] = useState(() => "wolfhound");
 
   const dogRD = useReaderTaskEitherWithRemoteData({
+    // Real data
     rte: getDogWithCache(dogId),
+    // Dummy data
+    /*
+    rte: () =>
+      TE.of<never, Dog>({
+        id: dogId,
+        name: dogId,
+        breed: { id: "?", name: "?" },
+      }),
+      */
     rteEnv: appEnv, // Could stub in a dummy AppEnv here (or whatever mix of dummy & real stuff you want)
     effectDeps: [dogId],
     eqEffectDeps: Eq.getTupleEq(Eq.eqString),

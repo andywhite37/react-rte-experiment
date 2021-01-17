@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Eq, RD, RTE } from "../fp-ts-exports";
-import { useReaderTaskEither } from "./useReaderTaskEither";
+import {useState} from "react";
+import {Eq, RD, RTE} from "../fp-ts-exports";
+import {useReaderTaskEither} from "./useReaderTaskEither";
 
 export const useReaderTaskEitherWithRemoteData = <
   R,
@@ -9,12 +9,12 @@ export const useReaderTaskEitherWithRemoteData = <
   EffectDeps extends Array<unknown>
 >({
   rte,
-  rteEnv,
+  env,
   effectDeps,
   eqEffectDeps,
 }: {
   rte: RTE.ReaderTaskEither<R, E, A>;
-  rteEnv: R;
+  env: R;
   effectDeps: EffectDeps;
   eqEffectDeps: Eq.Eq<EffectDeps>;
 }) => {
@@ -24,10 +24,10 @@ export const useReaderTaskEitherWithRemoteData = <
 
   useReaderTaskEither({
     rte,
-    rteEnv,
+    env,
     effectDeps,
     eqEffectDeps,
-    onBeforeEffect: () => setRemoteData(RD.pending),
+    onBefore: () => setRemoteData(RD.pending),
     onError: (error) => setRemoteData(RD.failure(error)),
     onSuccess: (data) => setRemoteData(RD.success(data)),
   });

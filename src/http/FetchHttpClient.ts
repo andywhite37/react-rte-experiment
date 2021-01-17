@@ -1,12 +1,12 @@
-import { pipe, RTE, TE } from "../fp-ts-exports";
-import { HttpClient, HttpRequest, HttpResponse } from "./HttpClient";
-import { httpContentTypeError, httpRequestError } from "./HttpError";
+import {pipe, RTE, TE} from "../fp-ts-exports";
+import {HttpClient, HttpRequest, HttpResponse} from "./HttpClient";
+import {httpContentTypeError, httpRequestError} from "./HttpError";
 
 /**
  * Converts our HttpRequest abstraction into the fetch (DOM) Request
  */
 export const httpRequestToFetchRequest = (request: HttpRequest): Request =>
-  new Request(request.url, { ...request });
+  new Request(request.url, {...request});
 
 /**
  * Converts the fetch (DOM) Request into our HttpResponse abstraction

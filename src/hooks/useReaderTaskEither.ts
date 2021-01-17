@@ -1,8 +1,7 @@
-import { pipe } from "fp-ts/lib/pipeable";
-import { useEffect } from "react";
-import { E, Eq, RTE } from "../fp-ts-exports";
+import {pipe} from "fp-ts/lib/pipeable";
+import {useEffect} from "react";
+import {E, Eq, RTE} from "../fp-ts-exports";
 
-// TODO: not sure how best to do this... just toying
 export const useReaderTaskEither = <
   R,
   E,
@@ -10,19 +9,19 @@ export const useReaderTaskEither = <
   EffectDeps extends Array<unknown>
 >({
   rte,
-  rteEnv,
+  env,
   effectDeps,
   eqEffectDeps,
-  onBeforeEffect,
+  onBefore,
   onError,
   onSuccess,
   onFinally,
 }: {
   rte: RTE.ReaderTaskEither<R, E, A>;
-  rteEnv: R;
+  env: R;
   effectDeps: EffectDeps;
   eqEffectDeps: Eq.Eq<EffectDeps>;
-  onBeforeEffect?: () => void;
+  onBefore?: () => void;
   onError: (e: E) => void;
   onSuccess: (a: A) => void;
   onFinally?: () => void;
@@ -31,13 +30,14 @@ export const useReaderTaskEither = <
 
   useEffect(() => {
     // 1. Invoke before effect callback
-    if (onBeforeEffect !== undefined) onBeforeEffect();
+    if (onBefore !== undefined) onBefore();
 
     // 1. Apply the AppEnv to get the TaskEither (note: here is where you could stub in mock dependencies if you wanted to
     // 2. Start the Promise by calling the TaskEither
     // 3. Handle the results of the Promise with callbacks
-    rte(rteEnv)()
-      .then((either) => pipe(either, E.fold(onError, onSuccess)))
+
+    RTE.run(rte, env)
+      .then(E.fold(onError, onSuccess))
       .finally(onFinally);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, effectDeps);

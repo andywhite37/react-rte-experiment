@@ -1,6 +1,6 @@
-import { pipe } from "fp-ts/lib/pipeable";
-import { DecodeError } from "../AppErrors";
-import { E, RTE, TE } from "../fp-ts-exports";
+import {pipe} from "fp-ts/lib/pipeable";
+import {E, RTE, TE} from "../fp-ts-exports";
+import {DecodeError} from "../util/decode";
 import {
   HttpContentTypeError,
   HttpRequestError,
@@ -42,17 +42,13 @@ export interface HttpResponse {
  * A small, dedicated interface of methods related to making HTTP requests
  */
 export interface HttpClient {
-  sendRequest: RTE.ReaderTaskEither<
-    HttpRequest,
-    HttpRequestError,
-    HttpResponse
-  >;
+  sendRequest(request: HttpRequest): TE.TaskEither<HttpRequestError, HttpResponse>;
 }
 
 /**
  * Module intended for use as an RTE dependency
  */
-export interface HttpClientModule {
+export interface HttpClientEnv {
   httpClient: HttpClient;
 }
 
@@ -65,9 +61,9 @@ export interface HttpClientModule {
  */
 export const sendRequest = (
   httpRequest: HttpRequest
-): RTE.ReaderTaskEither<HttpClientModule, HttpRequestError, HttpResponse> =>
+): RTE.ReaderTaskEither<HttpClientEnv, HttpRequestError, HttpResponse> =>
   pipe(
-    RTE.asks((m: HttpClientModule) => m.httpClient),
+    RTE.asks((m: HttpClientEnv) => m.httpClient),
     RTE.chainTaskEitherKW((httpClient) => httpClient.sendRequest(httpRequest))
   );
 
@@ -80,9 +76,9 @@ export const ensureStatusRange = (
 ) => (
   httpResponse: HttpResponse
 ): E.Either<HttpResponseStatusError, HttpResponse> =>
-  httpResponse.status >= minInclusive && httpResponse.status < maxExclusive
-    ? E.right(httpResponse)
-    : E.left(
+    httpResponse.status >= minInclusive && httpResponse.status < maxExclusive
+      ? E.right(httpResponse)
+      : E.left(
         httpResponseStatusError(
           httpResponse,
           httpResponse.status,
@@ -108,7 +104,7 @@ export const sendBasicGetRequest = <A>(
   url: string,
   decode: (raw: unknown) => E.Either<DecodeError, A>
 ): RTE.ReaderTaskEither<
-  HttpClientModule,
+  HttpClientEnv,
   | HttpRequestError
   | HttpResponseStatusError
   | HttpContentTypeError<"json">
@@ -116,7 +112,7 @@ export const sendBasicGetRequest = <A>(
   A
 > =>
   pipe(
-    sendRequest({ method: "GET", url }),
+    sendRequest({method: "GET", url}),
     // Note: this function makes the assumption that any 2xx response contains a JSON body that can be decoded to an A.
     // This might not apply to all types of GET requests - if it doesn't apply to your use case, write a different function that does what you need.
     RTE.chainEitherKW(ensure2xx),

@@ -1,7 +1,5 @@
-import { pipe } from "fp-ts/lib/pipeable";
-import * as t from "io-ts";
-import { DecodeError, NotFoundError, notFoundError } from "../AppErrors";
-import { E, IO, O, RTE } from "../fp-ts-exports";
+import {pipe} from "fp-ts/lib/pipeable";
+import {E, IO, O, RTE} from "../fp-ts-exports";
 
 /**
  * Contains side-effecty functions for accessing localStorage
@@ -25,7 +23,7 @@ export interface LocalStorage {
  *
  * E.g. ReaderTaskEither<LocalStorageModule & HttpClientModule & OtherService, ...>
  */
-export interface LocalStorageModule {
+export interface LocalStorageEnv {
   localStorage: LocalStorage;
 }
 
@@ -39,14 +37,11 @@ export interface LocalStorageModule {
  */
 export const getItem = (
   key: string
-): RTE.ReaderTaskEither<LocalStorageModule, NotFoundError, string> =>
+): RTE.ReaderTaskEither<LocalStorageEnv, never, O.Option<string>> =>
   pipe(
-    RTE.asks((m: LocalStorageModule) => m.localStorage),
-    RTE.chainEitherKW((localStorage) =>
-      pipe(
-        localStorage.getItem(key)(),
-        E.fromOption(() => notFoundError)
-      )
+    RTE.asks((m: LocalStorageEnv) => m.localStorage),
+    RTE.chain((localStorage) =>
+      RTE.fromIO(localStorage.getItem(key))
     )
   );
 
@@ -58,27 +53,37 @@ export const getItem = (
 export const setItem = (
   key: string,
   value: string
-): RTE.ReaderTaskEither<LocalStorageModule, never, void> =>
+): RTE.ReaderTaskEither<LocalStorageEnv, never, void> =>
   pipe(
-    RTE.asks((m: LocalStorageModule) => m.localStorage),
-    RTE.map((localStorage) => localStorage.setItem(key, value)())
+    RTE.asks((m: LocalStorageEnv) => m.localStorage),
+    RTE.chain((localStorage) => RTE.fromIO(localStorage.setItem(key, value)))
   );
 
 /**
  * Helper function for getting and decoding a JSON item from localStorage
  */
-export const getAndDecodeItem = <A>(
+export const getItemWithDecode = <E, A>(
   key: string,
-  decode: (raw: unknown) => E.Either<t.Errors, A>
-): RTE.ReaderTaskEither<LocalStorageModule, NotFoundError | DecodeError, A> =>
-  pipe(getItem(key), RTE.map(JSON.parse), RTE.chainEitherKW(decode));
+  decode: (raw: unknown) => E.Either<E, A>
+): RTE.ReaderTaskEither<LocalStorageEnv, E, O.Option<A>> =>
+  pipe(
+    getItem(key),
+    RTE.chainEitherKW(itemStringOpt => pipe(itemStringOpt, O.fold(
+      (): E.Either<E, O.Option<A>> => E.right(O.none),
+      itemString => pipe(
+        itemString,
+        JSON.stringify,
+        decode,
+        E.map(O.some)
+      )
+    ))))
 
 /**
  * Helper function for encoding and setting a JSON item in localStorage
  */
-export const encodeAndSetItem = <A>(
+export const setItemWithEncode = <A>(
   key: string,
   item: A,
   encode: (a: A) => unknown
-): RTE.ReaderTaskEither<LocalStorageModule, never, void> =>
+): RTE.ReaderTaskEither<LocalStorageEnv, never, void> =>
   pipe(encode(item), JSON.stringify, (value) => setItem(key, value));

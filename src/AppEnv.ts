@@ -1,16 +1,16 @@
-import { fetchHttpClient } from "./http/FetchHttpClient";
-import { HttpClientModule } from "./http/HttpClient";
-import { domLocalStorage } from "./localStorage/DomLocalStorage";
-import { LocalStorageModule } from "./localStorage/LocalStorage";
+import {fetchHttpClient} from "./http/FetchHttpClient";
+import {HttpClientEnv} from "./http/HttpClient";
+import {domLocalStorage} from "./localStorage/DomLocalStorage";
+import {LocalStorageEnv} from "./localStorage/LocalStorage";
 
-export const httpClientModule: HttpClientModule = {
+export const httpClientEnv: HttpClientEnv = {
   httpClient: fetchHttpClient,
 };
 
-export const localStorageModule: LocalStorageModule = {
+export const localStorageEnv: LocalStorageEnv = {
   localStorage: domLocalStorage,
 };
 
-export type AppEnv = HttpClientModule & LocalStorageModule;
+export type AppEnv = HttpClientEnv & LocalStorageEnv;
 
-export const appEnv: AppEnv = { ...httpClientModule, ...localStorageModule };
+export const appEnv: AppEnv = {...httpClientEnv, ...localStorageEnv};

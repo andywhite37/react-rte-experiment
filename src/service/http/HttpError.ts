@@ -1,3 +1,4 @@
+import { DecodeError } from "../../util/decode";
 import { HttpResponse } from "./HttpClient";
 
 export type HttpRequestError = {
@@ -45,3 +46,12 @@ export const httpResponseStatusError = (
   minStatusInclusive,
   maxStatusExclusive,
 });
+
+/**
+ * Combination of common errors for JSON requests, for convenience
+ */
+export type HttpJsonError =
+  | HttpRequestError
+  | HttpContentTypeError<"json">
+  | HttpResponseStatusError
+  | DecodeError;

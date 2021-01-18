@@ -1,9 +1,6 @@
-import { O } from "../fp-ts-exports";
+import { O } from "../../util/fpts";
 import { LocalStorage } from "./LocalStorage";
 
-/**
- * Implementation of LocalStorage using the DOM API
- */
 export const domLocalStorage: LocalStorage = {
   getItem: (key: string) => () => O.fromNullable(localStorage.getItem(key)),
 

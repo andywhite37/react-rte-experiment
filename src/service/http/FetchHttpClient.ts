@@ -1,16 +1,10 @@
-import {pipe, RTE, TE} from "../fp-ts-exports";
-import {HttpClient, HttpRequest, HttpResponse} from "./HttpClient";
-import {httpContentTypeError, httpRequestError} from "./HttpError";
+import { pipe, RTE, TE } from "../../util/fpts";
+import { HttpClient, HttpRequest, HttpResponse } from "./HttpClient";
+import { httpContentTypeError, httpRequestError } from "./HttpError";
 
-/**
- * Converts our HttpRequest abstraction into the fetch (DOM) Request
- */
 export const httpRequestToFetchRequest = (request: HttpRequest): Request =>
-  new Request(request.url, {...request});
+  new Request(request.url, { ...request });
 
-/**
- * Converts the fetch (DOM) Request into our HttpResponse abstraction
- */
 export const fetchResponseToHttpResponse = (
   response: Response
 ): HttpResponse => {
@@ -29,17 +23,13 @@ export const fetchResponseToHttpResponse = (
   };
 };
 
-/**
- * Implementation of HttpClient using Web API `fetch`
- */
 export const fetchHttpClient: HttpClient = {
   sendRequest: pipe(
     RTE.ask<HttpRequest>(),
     RTE.chainTaskEitherK((request) =>
-      TE.tryCatch(
-        () => fetch(httpRequestToFetchRequest(request)),
-        httpRequestError
-      )
+      TE.tryCatch(() => {
+        return fetch(httpRequestToFetchRequest(request));
+      }, httpRequestError)
     ),
     RTE.map(fetchResponseToHttpResponse)
   ),

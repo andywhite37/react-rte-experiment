@@ -1,9 +1,9 @@
-import * as t from 'io-ts'
+import * as t from "io-ts";
 
 export type Image = {
-  url: string
-}
+  url: string;
+};
 
 export const imageCodec: t.Type<Image> = t.type({
-  url: t.string
-})
+  url: t.string,
+});

@@ -1,14 +1,21 @@
 import React, { useReducer, useState } from "react";
+import { appEnv, breedServiceEnv } from "../AppEnv";
 import {
+  AppEnvContext,
   useAppEnvReducer,
   useAppEnvRemoteData,
   useAppEnvRT,
   useAppEnvRTE,
 } from "../hooks/useAppEnv";
+import { BreedServiceContext, useBreedsRD } from "../hooks/useDomain";
 import { Breed } from "../model/Breed";
-import { getBreeds, getBreedsWithCache } from "../service/domain/DogService";
+import {
+  BreedService,
+  getBreeds,
+  getBreedsWithCache,
+} from "../service/domain/DogService";
 import { HttpJsonError } from "../service/http/HttpError";
-import { Eq, pipe, RD, RT, RTE } from "../util/fpts";
+import { Eq, pipe, RD, RT, RTE, TE } from "../util/fpts";
 import { Breeds } from "./Breeds";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +105,7 @@ const initialState = { breedsRD: RD.initial };
 
 type Reducer = (state: State, action: Action) => State;
 
-const reducer: Reducer = (state, action) => {
+const reducer: Reducer = (_state, action) => {
   switch (action.type) {
     case "loadingBreeds":
       return { breedsRD: RD.pending };
@@ -129,12 +136,84 @@ export const MainAppEnvReducer = () => {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// BreedService implementation
+////////////////////////////////////////////////////////////////////////////////
+
+const mockBreedService: BreedService<never> = {
+  getBreeds: TE.right([
+    { name: "breed1", subBreeds: ["sub1", "sub2"] },
+    { name: "breed2", subBreeds: ["sub3", "sub4"] },
+  ]),
+};
+
+export const MainBreedService = () => {
+  const breedsRD = useBreedsRD();
+
+  return <Breeds breedsRD={breedsRD} />;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // Show a particular implementation
 ////////////////////////////////////////////////////////////////////////////////
-//
+
 export const Main = () => {
-  //return <MainAppEnvRT />;
-  //return <MainAppEnvRTE />;
-  //return <MainAppEnvRemoteData />;
-  return <MainAppEnvReducer />;
+  ///////////////////////////////////////////////////////////////////////////////
+  // AppEnv context with ReaderTask-based hook
+  ///////////////////////////////////////////////////////////////////////////////
+
+  //return (
+  //<AppEnvContext.Provider value={appEnv}>
+  //<MainAppEnvRT />
+  //</AppEnvContext.Provider>
+  //);
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // AppEnv context with ReaderTask-based hook
+  ///////////////////////////////////////////////////////////////////////////////
+
+  //return (
+  //<AppEnvContext.Provider value={appEnv}>
+  //<MainAppEnvRTE />
+  //</AppEnvContext.Provider>
+  //);
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // AppEnv context with RemoteData-based hook
+  ///////////////////////////////////////////////////////////////////////////////
+
+  //return (
+  //<AppEnvContext.Provider value={appEnv}>
+  //<MainAppEnvRemoteData />
+  //</AppEnvContext.Provider>
+  //);
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // AppEnv context with reducer-based hook
+  ///////////////////////////////////////////////////////////////////////////////
+
+  //return (
+  //<AppEnvContext.Provider value={appEnv}>
+  //<MainAppEnvReducer />
+  //</AppEnvContext.Provider>
+  //);
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // BreedService context with real API
+  ///////////////////////////////////////////////////////////////////////////////
+
+  return (
+    <BreedServiceContext.Provider value={breedServiceEnv}>
+      <MainBreedService />
+    </BreedServiceContext.Provider>
+  );
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // BreedService context with mock data
+  ///////////////////////////////////////////////////////////////////////////////
+
+  //return (
+  //<BreedServiceContext.Provider value={{ breedService: mockBreedService }}>
+  //<MainBreedService />
+  //</BreedServiceContext.Provider>
+  //);
 };

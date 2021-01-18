@@ -1,7 +1,14 @@
+import React, { useContext } from "react";
 import { useState } from "react";
-import { AppEnv, useAppEnv } from "../AppEnv";
+import { appEnv, AppEnv } from "../AppEnv";
 import { E, Eq, pipe, RD, RT, RTE } from "../util/fpts";
 import { useIO } from "./useIO";
+
+export const AppEnvContext = React.createContext(appEnv);
+
+export const useAppEnv = () => {
+  return useContext(AppEnvContext);
+};
 
 /**
  * Runs an ReaderTask using the global AppEnv. A ReaderTask is the same as a ReaderTaskEither

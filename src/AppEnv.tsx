@@ -87,12 +87,3 @@ export const appEnv: AppEnv = {
   ...breedServiceEnv,
   ...breedImageServiceEnv,
 };
-
-export const AppEnvContext = React.createContext(appEnv);
-
-// TODO: not sure how best to do this
-// I want the caller to be able to say which parts of the Env they want, so they don't have to
-// over-depend on the entire AppEnv
-export const useAppEnv = () => {
-  return useContext(AppEnvContext);
-};

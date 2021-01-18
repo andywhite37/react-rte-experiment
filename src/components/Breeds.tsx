@@ -32,7 +32,14 @@ export const Breeds = ({
           (breeds) => (
             <ul>
               {breeds.map((breed) => (
-                <li key={breed.name}>{breed.name}</li>
+                <li key={breed.name}>
+                  {breed.name}
+                  <ul>
+                    {breed.subBreeds.map((subBreed) => (
+                      <li key={subBreed}>{subBreed}</li>
+                    ))}
+                  </ul>
+                </li>
               ))}
             </ul>
           )

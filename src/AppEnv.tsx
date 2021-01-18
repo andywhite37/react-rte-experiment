@@ -62,6 +62,18 @@ export const breedImageServiceEnv: BreedImageServiceEnv<HttpJsonError> = {
   breedImageService,
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Implementation of context where we bundle it all together for consumption.
+//
+// Pros:
+// - Components can use RTEs that depend on any part of the overall AppEnv
+// - Easy to create a general-purpose custom hook that can run any RTE that depends on AppEnv
+//
+// Cons:
+// - Use of AppEnv-based hook makes your component dependent on the whole AppEnv.
+//   This is a tradeoff between component isolation and convenience.
+////////////////////////////////////////////////////////////////////////////////
+
 export type AppEnv = HttpClientEnv &
   LocalStorageEnv &
   CacheServiceEnv &
@@ -75,10 +87,6 @@ export const appEnv: AppEnv = {
   ...breedServiceEnv,
   ...breedImageServiceEnv,
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// Infrastructure service context providers and hooks
-////////////////////////////////////////////////////////////////////////////////
 
 export const AppEnvContext = React.createContext(appEnv);
 

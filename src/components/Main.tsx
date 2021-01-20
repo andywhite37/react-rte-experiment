@@ -1,5 +1,10 @@
 import React, { useReducer, useState } from "react";
-import { appEnv, breedServiceEnv } from "../AppEnv";
+import {
+  appEnv,
+  breedServiceEnv,
+  cacheServiceEnv,
+  httpClientEnv,
+} from "../AppEnv";
 import {
   AppEnvContext,
   useAppEnvReducer,
@@ -8,6 +13,7 @@ import {
   useAppEnvRTE,
 } from "../hooks/useAppEnv";
 import { BreedServiceContext, useBreedsRD } from "../hooks/useDomain";
+import { useIO } from "../hooks/useIO";
 import { Breed } from "../model/Breed";
 import {
   BreedService,
@@ -15,8 +21,38 @@ import {
   getBreedsWithCache,
 } from "../service/domain/DogService";
 import { HttpJsonError } from "../service/http/HttpError";
-import { Eq, pipe, RD, RT, RTE, TE } from "../util/fpts";
+import { E, Eq, pipe, RD, RT, RTE, TE } from "../util/fpts";
 import { Breeds } from "./Breeds";
+
+////////////////////////////////////////////////////////////////////////////////
+// Vanillaish implementation
+////////////////////////////////////////////////////////////////////////////////
+
+export const MainRTEWithGlobalDeps = () => {
+  const [remoteData, setRemoteData] = useState<
+    RD.RemoteData<HttpJsonError, Array<Breed>>
+  >(RD.initial);
+
+  useIO(
+    () => {
+      setRemoteData(RD.pending);
+      RTE.run(getBreedsWithCache, {
+        // Not great b/c we are importing global static deps - hard to test/mock/reuse
+        ...httpClientEnv,
+        ...cacheServiceEnv,
+      }).then(
+        E.fold(
+          (e) => setRemoteData(RD.failure(e)),
+          (b) => setRemoteData(RD.success(b))
+        )
+      );
+    },
+    [],
+    Eq.getTupleEq()
+  );
+
+  return <Breeds breedsRD={remoteData} />;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Using lowest-level ReaderTask implementation
@@ -31,6 +67,7 @@ export const MainAppEnvRT = () => {
     RD.RemoteData<HttpJsonError, Array<Breed>>
   >(RD.initial);
 
+  // Not great b/c we are dependent on the entire AppEnv, and the logic here is a little "low-level"
   useAppEnvRT({
     rt: pipe(
       getBreeds,
@@ -63,6 +100,7 @@ export const MainAppEnvRTE = () => {
     RD.RemoteData<HttpJsonError, Array<Breed>>
   >(RD.initial);
 
+  // A littler simpler logic, but still depend on entire AppEnv
   useAppEnvRTE({
     rte: getBreeds,
     onBefore: () => setBreedsRD(RD.pending),
@@ -80,6 +118,7 @@ export const MainAppEnvRTE = () => {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const MainAppEnvRemoteData = () => {
+  // Simpler, still depends on AppEnv
   const breedsRD = useAppEnvRemoteData({
     rte: getBreeds,
     deps: [],
@@ -93,6 +132,7 @@ export const MainAppEnvRemoteData = () => {
 // Using an RTE that manifests itself as reducer/redux actions
 ////////////////////////////////////////////////////////////////////////////////
 
+// Redux/reducer code
 type LoadingBreeds = { type: "loadingBreeds" };
 type FailedBreeds = { type: "failedBreeds"; error: HttpJsonError };
 type LoadedBreeds = { type: "loadedBreeds"; breeds: Array<Breed> };
@@ -119,6 +159,7 @@ const reducer: Reducer = (_state, action) => {
 export const MainAppEnvReducer = () => {
   const [state, dispatch] = useReducer<Reducer>(reducer, initialState);
 
+  // Demo for dispatching actions (still depends on AppEnv)
   useAppEnvReducer({
     rte: getBreedsWithCache,
     dispatch,
